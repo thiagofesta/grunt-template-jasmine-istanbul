@@ -40,7 +40,11 @@ exports.process = function (grunt, task, context) {
 				grunt.file.read(src), src));
 		instrumentedSrc.push(tmpSrc);
 	});
-	context.scripts.src = instrumentedSrc;
+    if(context.options.templateOptions.requireConfig) {
+        context.scripts.src = [];
+    } else {
+        context.scripts.src = instrumentedSrc;
+    }
 	// listen to coverage event dispatched by reporter and write reports
 	var collector = new istanbul.Collector();
 	var coverageJson = context.options.coverage;
