@@ -177,9 +177,9 @@ exports.process = function (grunt, task, context) {
 	// replace sources
 	if (context.options.replace == null || context.options.replace) {
 		context.scripts.src = instrumentedSources;
-		if(context.options.templateOptions.requireConfig) {
-	        context.scripts.src = [];
-	    }
+	}
+	if(context.options.templateOptions.requireConfig) {
+	    context.scripts.src = [];
 	}
 	// listen to coverage event dispatched by reporter
 	task.phantomjs.on('jasmine.coverage', function (coverage) {
