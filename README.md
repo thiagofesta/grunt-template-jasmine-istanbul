@@ -43,6 +43,22 @@ The supported types are:
  * [`lcovonly`](http://gotwarlost.github.com/istanbul/public/apidocs/classes/LcovOnlyReport.html)
  * [`cobertura`](http://gotwarlost.github.com/istanbul/public/apidocs/classes/CoberturaReport.html)
 
+### templateOptions.replace
+
+Type: `Boolean`
+Default: `true`
+
+Whether or not the `src` scripts are replaced by the paths to their instrumented versions.
+This is useful when you want the mixed-in template to work with the original sources, and you want to serve the instrumented sources by redirecting request on the server side.
+
+### templateOptions.thresholds
+Type: `Object`
+Default: `undefined`
+
+Thresholds for any of the metrics that Istanbul measures.
+If a threshold is not met, a warning is emitted.
+See example below for available metrics.
+
 ### templateOptions.template
 Type: `String | Object`
 Default: jasmine's default template
@@ -55,9 +71,11 @@ Default: `undefined`
 
 The options to pass to the mixed-in template.
 
-## Sample Usage
+## Examples
 
-### Basic
+There are multiple examples at a [example repository](https://github.com/maenu/grunt-template-jasmine-istanbul-example).
+
+### Simple
 
 Have a look at [this example](https://github.com/maenu/grunt-template-jasmine-istanbul-example).
 
@@ -73,6 +91,12 @@ grunt.initConfig({
 				templateOptions: {
 					coverage: 'bin/coverage/coverage.json',
 					report: 'bin/coverage',
+                    thresholds: {
+                        lines: 75,
+                        statements: 75,
+                        branches: 75,
+                        functions: 90
+                    }
 				}
 			}
 		}
@@ -109,6 +133,15 @@ grunt.initConfig({
 }
 ```
 
+#### Is it really that easy?
+
+No.
+
+Setting `baseUrl` to that location may screw up your whole configuration, because paths relative to the original sources are broken.
+Therefore, if this happens to you, instead of directly loading the instrumented sources, set `replace: false`, intercept request to the original sources and redirect them to the instrumented versions.
+You can do this on both the [client side](https://github.com/maenu/grunt-template-jasmine-istanbul-example/tree/requirejs-client), or the [server side](https://github.com/maenu/grunt-template-jasmine-istanbul-example/tree/requirejs-server).
+Look at the corresponding `Grunfile.js` files and be filled with horror: Yes, this is nasty, but it (seems to) works.
+
 ## Mixed-in Templates
 
 ### The Idea
@@ -126,3 +159,9 @@ A mixed-in template needs to load the instrumented sources in order for the cove
 This template copies instrumented versions of the sources to a temporary location at `.grunt/grunt-contrib-jasmine/`.
 If your mixed-in template simply includes the sources, as the default template does, you don't need to account for that, since this template replaces the `src` option with the paths to the instrumented versions.
 If your mixed-in template loads the sources differently, e.g. directly from the file system, you may need to reconfigure the mixed-in template.
+
+## Change Log
+ * v0.2.5, 10.08.13, reporter is now moved to and loaded from jasmine's temporary directory, fixes #11
+ * v0.2.4, 26.05.13, merged #12 from @kayhadrin, instrumented versions of files loaded via absolute paths on windows are now created at a valid path
+ * v0.2.3, 12.05.13, merged `thresholds` from @larsthorup #9 which can abort a build with too low coverage
+ * v0.2.2, 11.05.13, added `replace` option, so it can be prevented that the original `src` option is replaced with their instrumented versions
