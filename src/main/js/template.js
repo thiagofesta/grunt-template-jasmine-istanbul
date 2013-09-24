@@ -36,8 +36,12 @@ var instrument = function (sources, tmp) {
 			sanitizedSource = source.replace(/^([a-z]):/i, '$1');
 		}
 		var tmpSource = path.join(tmp, sanitizedSource);
-		grunt.file.write(tmpSource, instrumenter.instrumentSync(
+		if((tmpSource.length-3) === tmpSource.indexOf(".js")) {
+			grunt.file.write(tmpSource, instrumenter.instrumentSync(
 				grunt.file.read(source), source));
+		} else {
+			grunt.file.write(tmpSource, grunt.file.read(source));
+		}
 		instrumentedSources.push(tmpSource);
 	});
 	return instrumentedSources;
