@@ -35,13 +35,15 @@ var instrument = function (sources, tmp, excludePatternOptions) {
 		if (process.platform == 'win32') {
 			sanitizedSource = source.replace(/^([a-z]):/i, '$1');
 		}
-		var tmpSource = path.join(tmp, sanitizedSource),
-			tmpSourceTest = tmpSource;
-		if(tmpSourceTest.substr(0,1) === ".") {
-			tmpSourceTest = "\\" + tmpSourceTest;
+		var tmpSource = path.join(tmp, sanitizedSource);
+
+		// Some folders are called ``somename.js`` and it breaks
+		// sample: js/vendor/jquery/src/sizzle/speed/benchmark.js
+		if(!grunt.file.isFile(source)) {
+			return;
 		}
 
-		var shouldInstrument = !grunt.file.isMatch(excludePatternOptions, tmpSourceTest);
+		var shouldInstrument = !grunt.file.isMatch(excludePatternOptions, source);
 
 		if(shouldInstrument) {
 			grunt.file.write(tmpSource, instrumenter.instrumentSync(
