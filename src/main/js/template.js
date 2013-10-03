@@ -26,7 +26,7 @@ var DEFAULT_TEMPLATE = __dirname + '/../../../../grunt-contrib-jasmine/tasks/'
  *
  * @return {Array} The paths to the instrumented sources
  */
-var instrument = function (sources, tmp) {
+var instrument = function (sources, tmp, excludePatternOptions) {
 	var instrumenter = new istanbul.Instrumenter();
 	var instrumentedSources = [];
 	sources.forEach(function (source) {
@@ -35,8 +35,15 @@ var instrument = function (sources, tmp) {
 		if (process.platform == 'win32') {
 			sanitizedSource = source.replace(/^([a-z]):/i, '$1');
 		}
-		var tmpSource = path.join(tmp, sanitizedSource);
-		if((tmpSource.length-3) === tmpSource.indexOf(".js")) {
+		var tmpSource = path.join(tmp, sanitizedSource),
+			tmpSourceTest = tmpSource;
+		if(tmpSourceTest.substr(0,1) === ".") {
+			tmpSourceTest = "\\" + tmpSourceTest;
+		}
+
+		var shouldInstrument = !grunt.file.isMatch(excludePatternOptions, tmpSourceTest);
+
+		if(shouldInstrument) {
 			grunt.file.write(tmpSource, instrumenter.instrumentSync(
 				grunt.file.read(source), source));
 		} else {
@@ -172,17 +179,21 @@ var processMixedInTemplate = function (grunt, task, context) {
  * @return {String} The template HTML source
  */
 exports.process = function (grunt, task, context) {
+	var templateOptions = context.options.templateOptions || {},
+		intrumentOptions = context.options.instrument || {},
+		excludePatternOptions = intrumentOptions.excludePattern || [];
+
 	// prepend coverage reporter
 	var tmpReporter = path.join(context.temp, TMP_REPORTER);
 	grunt.file.copy(REPORTER, tmpReporter);
 	context.scripts.reporters.unshift(tmpReporter);
 	// instrument sources
-	var instrumentedSources = instrument(context.scripts.src, context.temp);
+	var instrumentedSources = instrument(context.scripts.src, context.temp, excludePatternOptions);
 	// replace sources
 	if (context.options.replace == null || context.options.replace) {
 		context.scripts.src = instrumentedSources;
 	}
-	if(context.options.templateOptions.requireConfig) {
+	if(templateOptions.requireConfig) {
 	    context.scripts.src = [];
 	}
 	// listen to coverage event dispatched by reporter
